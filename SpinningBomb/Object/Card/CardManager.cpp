@@ -18,7 +18,7 @@ void UCardManager::InitializeCardPool()
 	UDataTable* CardDataTable = LoadObject<UDataTable>(this, TEXT("DataTable'/Game/InGame/Card/DT_CardDataTable.DT_CardDataTable'"));
 	if (CardDataTable)
 	{
-		//Card Wight
+		//Card Weight
 		TMap<ECardType, int32> CardWeightMap;
 		CardWeightMap.Add(ECardType::Red, 5);
 		CardWeightMap.Add(ECardType::Blue, 3);
@@ -88,6 +88,6 @@ TArray<FName> UCardManager::DealCards(int32 NumCards)
 		CardPool.RemoveAt(0);
 	}
 	UE_LOG(LogTemp, Warning, TEXT("CardManager::DealCArds : %d"), DealtCards.Num());
-	//4/13 현재 오류 -> DealtCards = 0으로 생성
+
 	return DealtCards;
 }

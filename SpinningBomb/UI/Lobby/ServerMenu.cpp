@@ -73,22 +73,29 @@ void UServerMenu::NativeDestruct()
 
 }
 
+// GameInstance의 델리게이트 호출 시,
 void UServerMenu::SetLobbyList(TArray<FSessionDataStruct>& LobbyDatas)
 {
+	FString str = FString::FromInt(LobbyDatas.Num());
+	RefreshState->SetText(FText::FromString(str));
+
 	LobbyList->ClearChildren();
 
-	uint32 index = 0;
-	for (const FSessionDataStruct& LobbyData : LobbyDatas)
+	if (!LobbyDatas.IsEmpty())
 	{
-		UServerListRow* ListRow = CreateWidget<UServerListRow>(this, ServerListRow);
-		if (!ensure(ListRow != nullptr)) return;
+		uint32 index = 0;
+		for (const FSessionDataStruct& LobbyData : LobbyDatas)
+		{
+			UServerListRow* ListRow = CreateWidget<UServerListRow>(this, ServerListRow);
+			if (!ensure(ListRow != nullptr)) return;
 
-		ListRow->SetLobbyData(LobbyData);
-		ListRow->SetIndex(this, index);
-		++index;
-		LobbyList->AddChild(ListRow);
+			ListRow->SetLobbyData(LobbyData);
+			ListRow->SetIndex(this, index++);
+			LobbyList->AddChild(ListRow);
+		}
 	}
 
+	// 델리게이트 바인드는 새로고침 버튼에서, 새로고침 이전엔 또 사용 안하므로 언바인드
 	if (UBombGameInstance* GI = GetGameInstance<UBombGameInstance>())
 	{
 		GI->OnFindSessionCompleted.Unbind();
@@ -130,6 +137,9 @@ void UServerMenu::OnClickedRefreshList()
 		GI->FindCreatedSession();
 		GI->OnFindSessionCompleted.BindUFunction(this, FName("SetLobbyList"));
 		UE_LOG(LogTemp, Error, TEXT("ServerMenu::Bind Delegate"));
+
+		FString str = "Update....";
+		RefreshState->SetText(FText::FromString(str));
 	}
 }
 
@@ -164,7 +174,6 @@ void UServerMenu::OnClickedJoinLobby()
 {
 	if (SelectedLobbyData.IsSet())
 	{
-
 		if (UBombGameInstance* GI = GetGameInstance<UBombGameInstance>())
 		{
 			GI->JoinSelectedSession(SelectedLobbyIndex.GetValue());

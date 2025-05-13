@@ -30,7 +30,7 @@ void ABombPlayerState::PostInitializeComponents()
 		if (LobbyPC != nullptr)
 		{
 			SetPlayerName(LobbyPC->GetUserName());
-			SetUniqueId(LobbyPC->GetUniqueNetId());
+			//SetUniqueId(LobbyPC->GetUniqueNetId());
 			//SteamAvatarTexture = LobbyPC->GetSteamAvatarTexture();
 		}
 		
@@ -73,6 +73,7 @@ void ABombPlayerState::SetReady(bool NewReady)
 			GM->CheckAllPlayerReadyState();
 		}
 	}
+	//bIsReady의 Replicated는 클라이언트에서만.. 직접호출
 	OnRep_Ready();
 }
 

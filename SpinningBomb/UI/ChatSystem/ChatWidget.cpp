@@ -32,7 +32,6 @@ void UChatWidget::AddChatMessage(const FString& Message)
 	if (ChatMessageRow)
 	{
 		UChatMessageRow* ChatRow = CreateWidget<UChatMessageRow>(this, ChatMessageRow);
-		if (!ensure(ChatRow != nullptr)) return;
 		ChatRow->SetChatMessage(Message);
 
 		if (!ensure(ScrollBox != nullptr)) return;
@@ -62,15 +61,13 @@ void UChatWidget::OnTextCommitted(const FText& text, ETextCommit::Type CommitMet
 
 		if (!TrimmedText.IsEmpty())
 		{
-			ABombPlayerController* Controller = Cast<ABombPlayerController>(GetOwningPlayer());
-			if (Controller)
+			if(ABombPlayerController* Controller = Cast<ABombPlayerController>(GetOwningPlayer()))
 			{
 				Controller->Server_SendChatMessage(TrimmedText);
 
 				FInputModeGameOnly InputMode;
 				Controller->SetInputMode(InputMode);
 
-				// 채팅창 비우고 비활성화
 				ChatText->SetText(FText::GetEmpty());
 				ChatText->SetIsEnabled(false);
 			}

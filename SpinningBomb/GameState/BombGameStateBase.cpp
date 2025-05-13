@@ -14,7 +14,7 @@ ABombGameStateBase::ABombGameStateBase()
 {
 	GameModeClass = ABombGameModeBase::StaticClass();
 	AuthorityGameMode = GameModeClass.GetDefaultObject();
-
+	PlayerArray;
 	NumOfPlayerInGame = 0;
 	CurrentTurnOfPlayer = 0;
 }

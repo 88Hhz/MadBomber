@@ -180,14 +180,15 @@ void ULobbyWidget::OnClickedExitLobby()
 
 void ULobbyWidget::OnClickedGameStart()
 {
-	
 	if (ALobbyPlayerController* PC = GetOwningPlayer<ALobbyPlayerController>())
 	{
+		//같은 버튼이 클라이언트는 Ready
 		if (!PC->HasAuthority())
 		{
 			bIsReady = !bIsReady;
 			PC->Server_UpdateReadyState(bIsReady);
 		}
+		//서버는 GameStart 버튼
 		else
 		{
 			PC->StartGame();

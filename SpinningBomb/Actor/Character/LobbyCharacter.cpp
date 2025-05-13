@@ -52,8 +52,14 @@ void ALobbyCharacter::BeginPlay()
 	if (PlayerWidget != nullptr)
 	{
 		PlayerWidgetComp->SetWidgetClass(PlayerWidget);
-		SetPlayerName();
+		//SetPlayerName();
 	}
+}
+
+void ALobbyCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
 }
 
 // Called every frame
@@ -74,16 +80,16 @@ void ALobbyCharacter::SetPlayerName()
 {
 	if (PlayerWidgetComp)
 	{
-		if (UUserWidget* UW = PlayerWidgetComp->GetUserWidgetObject())
+		UUserWidget* UW = PlayerWidgetComp->GetUserWidgetObject();
+		if (!UW) return;
+
+		ULobbyPlayerListRow* ListRow = Cast<ULobbyPlayerListRow>(UW);
+		if (!ListRow) return;
+
+		if (APlayerController* PC = GetController<APlayerController>())
 		{
-			if (ULobbyPlayerListRow* ListRow = Cast<ULobbyPlayerListRow>(UW))
-			{
-				if (APlayerController* PC = GetController<APlayerController>())
-				{
-					UE_LOG(LogTemp, Warning, TEXT("UserNAme is::  %s"), *PC->PlayerState->GetPlayerName());
-					ListRow->SetPlayerName(PC->PlayerState->GetPlayerName());
-				}
-			}
+			UE_LOG(LogTemp, Warning, TEXT("UserName is::  %s"), *PC->PlayerState->GetPlayerName());
+			ListRow->SetPlayerName(PC->PlayerState->GetPlayerName());
 		}
 	}
 }

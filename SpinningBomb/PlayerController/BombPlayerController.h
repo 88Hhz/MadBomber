@@ -45,12 +45,10 @@ public:
 	//Chat Service
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SendChatMessage(const FString& Message);
-	void Server_SendChatMessage_Implementation(const FString& Message);
 	bool Server_SendChatMessage_Validate(const FString& Message);
 
 	UFUNCTION(Client, Reliable)
 	void Client_ReceiveChatMessage(const FString& Message);
-	void Client_ReceiveChatMessage_Implementation(const FString& Message);
 
 
 	//InGame Card Deal System/ GM -> PC -> HUD -> CardWidget

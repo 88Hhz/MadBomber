@@ -131,6 +131,11 @@ protected:
 	UFUNCTION(BlueprintCallable, category = "ServerSettingFunction")
 	void OnClickedJoinCancel();
 
+
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), category = "ServerSettingWidget")
+	class UTextBlock* RefreshState;
+
 private:
 	//IServerSettingInterface* ServerInterface;
 

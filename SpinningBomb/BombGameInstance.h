@@ -21,7 +21,7 @@
 
 
 
-DECLARE_DYNAMIC_DELEGATE_OneParam(FOnFindSessionCompleted, const TArray<FSessionDataStruct>, SessionDatas);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnFindSessionCompleted, const TArray<FSessionDataStruct>&, SessionDatas);
 
 /**
  * 

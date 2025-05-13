@@ -29,10 +29,6 @@ void ALobbyPlayerController::OnPossess(APawn* aPawn)
 {
 	Super::OnPossess(aPawn);
 
-	if (ALobbyCharacter* Ch = Cast<ALobbyCharacter>(aPawn))
-	{
-		Ch->SetPlayerName();
-	}
 }
 
 void ALobbyPlayerController::ExitCurrentLobby()
@@ -101,7 +97,6 @@ void ALobbyPlayerController::Server_UpdateReadyState_Implementation(bool NewRead
 	{
 		PS->SetReady(NewReady);
 	}
-
 }
 
 

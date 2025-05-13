@@ -126,9 +126,11 @@ void ALobbyGameMode::CheckAllPlayerReadyState()
 
 	for (auto& Map : PCMap)
 	{
+		//컨트롤러마다 부여된 Index로 확인
 		APlayerController* PC = Map.Key;
 		int32 SlotIndex = Map.Value;
 
+		//서버(호스트)는 레디유무 체크 제외
 		if (SlotIndex == 0)
 		{
 			HostPC = Cast<ALobbyPlayerController>(PC);
@@ -137,6 +139,7 @@ void ALobbyGameMode::CheckAllPlayerReadyState()
 
 		if (ABombPlayerState* PS = Cast<ABombPlayerState>(PC->PlayerState))
 		{
+			//한명이라도 레디상태 아니면 버튼 비활성화
 			if (!PS->GetIsReady())
 			{
 				bCanStartMatch = false;
@@ -147,6 +150,7 @@ void ALobbyGameMode::CheckAllPlayerReadyState()
 
 	if (HostPC != nullptr)
 	{
+		//PlayerController에서 Widget으로 전달
 		HostPC->EnableStartButton(bCanStartMatch);
 	}
 }

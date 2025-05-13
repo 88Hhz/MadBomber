@@ -2,11 +2,10 @@
 
 
 #include "BombGameInstance.h"
-//#include "Online/OnlineSessionNames.h"
+
+#include "Online/OnlineSessionNames.h"
 
 #include "UObject/ConstructorHelpers.h"
-
-
 
 #include "Engine/Texture2D.h"
 #include "Kismet/KismetRenderingLibrary.h"
@@ -46,11 +45,14 @@ void UBombGameInstance::Init()
             GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Orange, FString::Printf(TEXT("Subsystem 이름: %s"), *OnlineSubsystem->GetSubsystemName().ToString()));
         }
 
-        if (IOnlineSubsystem::Get()->GetSubsystemName() != "NULL")
+        if (GEngine != nullptr)
         {
-            UserName = FText::FromString(UTF8_TO_TCHAR(SteamFriends()->GetPersonaName()));
-            UE_LOG(LogTemp, Warning, TEXT("SteamInit(): %s"), *UserName.ToString());
-            UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("SteamInit(): Name: %s"), *UserName.ToString()), true, true, FLinearColor::Green, 8.0f);
+            //추후 Network Failure 관리 추가
+        }
+
+        if (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL")
+        {
+            
         }
         else
         {
@@ -68,6 +70,7 @@ void UBombGameInstance::CreateSession(int32 NumPublicConnections, FString LobbyN
     }
 
     const TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings());
+
     //SessionSettings->bIsLANMatch = false;
     SessionSettings->bIsLANMatch = (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL") ? true : false;
 
@@ -77,13 +80,14 @@ void UBombGameInstance::CreateSession(int32 NumPublicConnections, FString LobbyN
     SessionSettings->bAllowJoinViaPresence = true;					// Presence를 통해 참여 허용
     SessionSettings->bUseLobbiesIfAvailable = true;					// 플랫폼이 지원하는 경우 로비 API 사용
     SessionSettings->NumPublicConnections = NumPublicConnections;	// 최대 접속 가능 수
-    //SessionSettings->bShouldAdvertise = !bFriendOnly;				// 현재 세션을 광고할지 (스팀의 다른 플레이어에게 세션 홍보 여부
-    SessionSettings->bShouldAdvertise = true;
+    SessionSettings->bShouldAdvertise = !bFriendOnly;				// 현재 세션을 광고할지 (스팀의 다른 플레이어에게 세션 홍보 여부
+
+    SessionSettings->bShouldAdvertise = true;				// 현재 세션을 광고할지 (스팀의 다른 플레이어에게 세션 홍보 여부
 
     SessionSettings->Set(FName("LOBBY_NAME"), LobbyName, EOnlineDataAdvertisementType::ViaOnlineService);  // 로비의 이름 설정
 
 
-    /*const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+   /* const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
     SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), SESSION_NAME, *SessionSettings);*/
 
     SessionInterface->CreateSession(0, SESSION_NAME, *SessionSettings);
@@ -116,7 +120,9 @@ void UBombGameInstance::FindCreatedSession()
     }
 
     SessionSearch = MakeShareable(new FOnlineSessionSearch());
+
     SessionSearch->bIsLanQuery = (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL") ? true : false;
+    //SessionSearch->bIsLanQuery = false; 			//LAN을 사용할 경우 true
     SessionSearch->MaxSearchResults = 10000;
     SessionSearch->QuerySettings.Set("SEARCH_PRESENCE", true, EOnlineComparisonOp::Equals);
 
@@ -147,6 +153,9 @@ void UBombGameInstance::JoinSelectedSession(const int32 Index)
     {
         SessionSearch->SearchResults[Index].Session.SessionSettings.Get(FName(TEXT("LOBBY_NAME")), CurrentLobbyName);
 
+        /*const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+        SessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), SESSION_NAME, SessionSearch->SearchResults[Index]);*/
+        
         SessionInterface->JoinSession(0, SESSION_NAME, SessionSearch->SearchResults[Index]);
     }
 }
@@ -255,6 +264,7 @@ void UBombGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuc
     {
         bIsInLobby = false;
         UGameplayStatics::OpenLevel(GetWorld(), "/Game/Levels/MainMap");
+       //ExitSessionAndLoadMainMenu();
     }
 }
 
@@ -262,30 +272,29 @@ void UBombGameInstance::OnFindSessionComplete(bool bWasSuccessful)
 {
     if (!SessionInterface.IsValid() || !bWasSuccessful)	return;
 
-    UE_LOG(LogTemp, Warning, TEXT("======== Search Result ========"));
 
+    TArray<FSessionDataStruct> SessionDatas;
     if (SessionSearch->SearchResults.Num() == 0)
     {
         UE_LOG(LogTemp, Warning, TEXT("Session search completed but no results found."));
-        return;
+    }
+    else 
+    {
+        for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults)
+        {
+            FSessionDataStruct SessionData;
+            SearchResult.Session.SessionSettings.Get(FName(TEXT("LOBBY_NAME")), SessionData.LobbyName);
+            SessionData.MaxPlayers = SearchResult.Session.SessionSettings.NumPublicConnections;
+            SessionData.CurrentPlayers = SessionData.MaxPlayers - SearchResult.Session.NumOpenPublicConnections;
+
+            SessionData.bIsFriendsOnly = SearchResult.Session.SessionSettings.bShouldAdvertise;
+
+            SessionData.HostUserName = SearchResult.Session.OwningUserName;
+            SessionDatas.Add(SessionData);
+            UE_LOG(LogTemp, Warning, TEXT("%s"), *SessionData.LobbyName);
+        }
     }
     UE_LOG(LogTemp, Warning, TEXT("Found %d sessions"), SessionSearch->SearchResults.Num());
-
-    TArray<FSessionDataStruct> SessionDatas;
-    for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults)
-    {
-        FSessionDataStruct SessionData;
-        SearchResult.Session.SessionSettings.Get(FName(TEXT("LOBBY_NAME")), SessionData.LobbyName);
-        SessionData.MaxPlayers = SearchResult.Session.SessionSettings.NumPublicConnections;
-        SessionData.CurrentPlayers = SessionData.MaxPlayers - SearchResult.Session.NumOpenPublicConnections;
-
-        SessionData.bIsFriendsOnly = SearchResult.Session.SessionSettings.bShouldAdvertise;
-
-        SessionData.HostUserName = SearchResult.Session.OwningUserName;
-        SessionDatas.Add(SessionData);
-        UE_LOG(LogTemp, Warning, TEXT("%s"), *SessionData.LobbyName);
-    }
-
     OnFindSessionCompleted.ExecuteIfBound(SessionDatas);
 }
 
@@ -306,7 +315,6 @@ void UBombGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionC
         {
             PC->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
         }
-        
     }
 }
 
